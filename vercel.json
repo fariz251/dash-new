@@ -1,0 +1,5 @@
+{
+  "functions": {
+    "api/cron/pull.js": { "maxDuration": 60 }
+  }
+}
