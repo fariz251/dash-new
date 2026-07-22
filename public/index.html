@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rekap Penjualan Shopee — Diansari Plastik & Mitra Diansari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #EEEAE0;
+    --paper-2: #E4DECF;
+    --ink: #202A2E;
+    --ink-soft: #55605F;
+    --brass: #A6752B;
+    --brass-dark: #7C5720;
+    --green: #2F6F4E;
+    --green-bg: #E3EEE6;
+    --brick: #A23B2E;
+    --brick-bg: #F3E2DE;
+    --line: #CFC6B2;
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Inter', sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+  .display{ font-family:'Zilla Slab', serif; }
+
+  header.top{
+    background:var(--ink); color:var(--paper);
+    padding:20px 28px; display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:14px;
+    border-bottom: 3px double var(--brass);
+  }
+  header.top h1{
+    font-family:'Zilla Slab', serif; font-weight:700; font-size:22px; margin:0;
+    letter-spacing:0.2px;
+  }
+  header.top .sub{ font-size:12px; color:#B9C0BC; margin-top:2px; }
+
+  .countdown{
+    text-align:right; font-family:'IBM Plex Mono', monospace;
+  }
+  .countdown .label{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#9FA8A4;}
+  .countdown .clock{
+    font-size:26px; font-weight:600; color:#F4C77A; letter-spacing:1px;
+  }
+  .countdown .clock.pulse{ animation: blink 1s step-start infinite; }
+  @keyframes blink{ 50%{ opacity:.45; } }
+
+  .refresh-btn{
+    margin-top:6px; background:transparent; border:1px solid var(--brass); color:#F4C77A;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; padding:5px 10px; border-radius:var(--radius);
+    cursor:pointer; letter-spacing:0.4px;
+  }
+  .refresh-btn:hover{ background:var(--brass); color:#fff; }
+  .refresh-btn:disabled{ opacity:0.5; cursor:wait; }
+
+  .shop-tabs{ display:flex; gap:8px; padding: 18px 28px 0; flex-wrap:wrap; }
+  .shop-tab{
+    padding:9px 18px; border:1px solid var(--line); background:var(--paper-2);
+    border-radius: var(--radius); cursor:pointer; font-weight:600; font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .shop-tab.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+
+  .month-tabs{
+    display:flex; gap:6px; padding: 14px 28px 0; flex-wrap:wrap;
+  }
+  .month-tab{
+    width:40px; height:34px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); background:#fff; cursor:pointer; font-family:'IBM Plex Mono', monospace;
+    font-size:13px; font-weight:600; color:var(--ink-soft); border-radius: var(--radius);
+  }
+  .month-tab.active{ background:var(--brass); border-color:var(--brass-dark); color:#fff; }
+
+  main{ padding: 20px 28px 60px; max-width:1280px; margin:0 auto; }
+
+  .summary-receipt{
+    background:#fff; border:1px solid var(--line); border-radius: var(--radius);
+    padding:18px 22px; margin-bottom:22px; position:relative;
+  }
+  .summary-receipt::before{
+    content:""; position:absolute; left:0; right:0; bottom:-9px; height:9px;
+    background-image: radial-gradient(circle at 6px 0, transparent 5px, #fff 5.5px);
+    background-size: 12px 9px; background-repeat:repeat-x;
+  }
+  .summary-title{ font-family:'Zilla Slab', serif; font-weight:700; font-size:15px; margin:0 0 12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.6px; }
+  .summary-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:14px; }
+  .stat{ border-left:3px solid var(--line); padding-left:10px; }
+  .stat .k{ font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.4px; }
+  .stat .v{ font-family:'IBM Plex Mono', monospace; font-size:18px; font-weight:600; margin-top:2px; }
+  .stat.profit .v.pos{ color:var(--green); }
+  .stat.profit .v.neg{ color:var(--brick); }
+  .stat.cancel .v{ color:var(--brick); }
+  .stat.potongan .v{ color:var(--brass-dark); }
+
+  table.daily{ width:100%; border-collapse:collapse; background:#fff; font-size:13px; }
+  table.daily th, table.daily td{ padding:9px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  table.daily th{ background:var(--paper-2); font-size:11px; text-transform:uppercase; letter-spacing:0.3px; color:var(--ink-soft); position:sticky; top:0; }
+  table.daily td.tgl, table.daily th.tgl{ text-align:left; font-family:'IBM Plex Mono', monospace; font-weight:600; }
+  table.daily td{ font-family:'IBM Plex Mono', monospace; }
+  table.daily tr:hover td{ background:#FBF9F4; }
+  td.cancel-cell{ color:var(--brick); }
+  td.profit-cell.pos{ color:var(--green); }
+  td.profit-cell.neg{ color:var(--brick); }
+  .table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius: var(--radius); max-height:70vh; overflow-y:auto;}
+
+  .estimasi-tag{ font-size:9px; background:var(--brass); color:#fff; padding:1px 5px; border-radius:2px; margin-left:6px; vertical-align:middle; }
+
+  section.hpp-panel{
+    margin-top:32px; background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:18px 22px;
+  }
+  section.hpp-panel h2{ font-family:'Zilla Slab', serif; font-size:16px; margin:0 0 12px; }
+  .hpp-form{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .hpp-form input{ padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); font-family:'IBM Plex Mono', monospace; font-size:13px; }
+  .hpp-form input[name=model_id]{ width:150px; }
+  .hpp-form input[name=sku_variasi]{ width:180px; }
+  .hpp-form input[name=hpp]{ width:120px; }
+  .hpp-form button{ background:var(--ink); color:#fff; border:none; padding:9px 16px; border-radius:var(--radius); cursor:pointer; font-weight:600; }
+  table.hpp-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.hpp-table th, table.hpp-table td{ padding:7px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  table.hpp-table button.del{ background:var(--brick-bg); color:var(--brick); border:none; padding:4px 8px; border-radius:2px; cursor:pointer; font-size:11px; }
+
+  .empty-note{ padding:24px; text-align:center; color:var(--ink-soft); font-size:13px; }
+  .footer-note{ text-align:center; font-size:11px; color:var(--ink-soft); margin-top:24px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>Rekap Penjualan Shopee</h1>
+    <div class="sub">Diansari Plastik &amp; Mitra Diansari — ditarik otomatis tiap 15 menit via n8n</div>
+  </div>
+  <div class="countdown">
+    <div class="label">Update berikutnya</div>
+    <div class="clock mono" id="clock">--:--</div>
+    <button id="manualRefreshBtn" class="refresh-btn">↻ Tarik Sekarang</button>
+  </div>
+</header>
+
+<div class="shop-tabs" id="shopTabs"></div>
+<div class="month-tabs" id="monthTabs"></div>
+
+<main>
+  <div class="summary-receipt" id="summaryBox">
+    <p class="summary-title">Summary Bulan Ini</p>
+    <div class="summary-grid" id="summaryGrid"><div class="empty-note">Memuat data...</div></div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="daily">
+      <thead>
+        <tr>
+          <th class="tgl">Tanggal</th>
+          <th>Omset Sales</th>
+          <th>Total Sales</th>
+          <th>Product Sales</th>
+          <th>Dicairkan</th>
+          <th>% Potongan</th>
+          <th>Cancel</th>
+          <th>Ads Spend</th>
+          <th>HPP</th>
+          <th>Profit</th>
+        </tr>
+      </thead>
+      <tbody id="dailyBody">
+        <tr><td colspan="10" class="empty-note">Memuat data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <section class="hpp-panel">
+    <h2>Input Manual HPP per SKU Variasi</h2>
+    <form class="hpp-form" id="hppForm">
+      <input name="model_id" placeholder="Model ID (SKU variasi)" required>
+      <input name="sku_variasi" placeholder="Nama SKU Variasi">
+      <input name="product_name" placeholder="Nama Produk Induk">
+      <input name="hpp" type="number" step="0.01" placeholder="HPP (Rp)" required>
+      <button type="submit">Simpan HPP</button>
+    </form>
+    <table class="hpp-table">
+      <thead><tr><th>Model ID</th><th>SKU Variasi</th><th>Produk</th><th>HPP</th><th></th></tr></thead>
+      <tbody id="hppBody"><tr><td colspan="5" class="empty-note">Memuat...</td></tr></tbody>
+    </table>
+  </section>
+
+  <p class="footer-note">Data disinkron oleh workflow n8n dari Shopee Open Platform API. "Dicairkan" berlabel ESTIMASI selama dana belum settle final oleh Shopee.</p>
+</main>
+
+<script>
+const API = '/api';
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+let state = { shop: null, shops: [], year: new Date().getFullYear(), month: new Date().getMonth()+1, nextRefresh: null };
+
+const rupiah = (n) => 'Rp ' + Math.round(n||0).toLocaleString('id-ID');
+const pct = (n) => (n||0).toFixed(2) + '%';
+
+async function fetchJSON(url, opts){
+  const res = await fetch(url, opts);
+  if(!res.ok){ const t = await res.text(); throw new Error(t); }
+  return res.json();
+}
+
+async function loadShops(){
+  const data = await fetchJSON(`${API}/shops`);
+  state.shops = data.rows;
+  if(!state.shop && state.shops.length) state.shop = state.shops[0].code;
+  renderShopTabs();
+}
+
+function renderShopTabs(){
+  const el = document.getElementById('shopTabs');
+  el.innerHTML = '';
+  state.shops.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'shop-tab' + (s.code === state.shop ? ' active' : '');
+    btn.textContent = s.name;
+    btn.onclick = () => { state.shop = s.code; renderShopTabs(); loadReport(); loadHpp(); };
+    el.appendChild(btn);
+  });
+}
+
+function renderMonthTabs(){
+  const el = document.getElementById('monthTabs');
+  el.innerHTML = '';
+  MONTH_NAMES.forEach((name, idx) => {
+    const m = idx + 1;
+    const btn = document.createElement('button');
+    btn.className = 'month-tab' + (m === state.month ? ' active' : '');
+    btn.textContent = name;
+    btn.title = name;
+    btn.onclick = () => { state.month = m; renderMonthTabs(); loadReport(); };
+    el.appendChild(btn);
+  });
+}
+
+function renderSummary(summary){
+  const el = document.getElementById('summaryGrid');
+  const profitClass = summary.profit >= 0 ? 'pos' : 'neg';
+  el.innerHTML = `
+    <div class="stat"><div class="k">Total Sales (Trx)</div><div class="v">${summary.total_sales_trx.toLocaleString('id-ID')}</div></div>
+    <div class="stat"><div class="k">Omset</div><div class="v">${rupiah(summary.omset_sales)}</div></div>
+    <div class="stat"><div class="k">Total Dicairkan</div><div class="v">${rupiah(summary.total_dicairkan)}</div></div>
+    <div class="stat potongan"><div class="k">% Potongan Shopee</div><div class="v">${pct(summary.pct_potongan)}</div></div>
+    <div class="stat cancel"><div class="k">Total Cancel</div><div class="v">${summary.total_cancel.toLocaleString('id-ID')}</div></div>
+    <div class="stat"><div class="k">Ads Spend</div><div class="v">${rupiah(summary.ads_spend)}</div></div>
+    <div class="stat"><div class="k">Total HPP</div><div class="v">${rupiah(summary.hpp_total)}</div></div>
+    <div class="stat profit"><div class="k">Profit (Dicairkan − HPP)</div><div class="v ${profitClass}">${rupiah(summary.profit)}</div></div>
+  `;
+}
+
+function renderDaily(rows){
+  const body = document.getElementById('dailyBody');
+  if(!rows.length){
+    body.innerHTML = '<tr><td colspan="10" class="empty-note">Belum ada data untuk bulan ini.</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(r => {
+    const profit = parseFloat(r.total_dicairkan) - parseFloat(r.hpp_total);
+    const profitClass = profit >= 0 ? 'pos' : 'neg';
+    const tgl = new Date(r.metric_date).toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+    return `<tr>
+      <td class="tgl">${tgl}</td>
+      <td>${rupiah(r.omset_sales)}</td>
+      <td>${Number(r.total_sales_trx).toLocaleString('id-ID')}</td>
+      <td>${Number(r.product_sales).toLocaleString('id-ID')}</td>
+      <td>${rupiah(r.total_dicairkan)}${r.is_estimasi ? '<span class="estimasi-tag">EST</span>' : ''}</td>
+      <td>${pct(r.pct_potongan)}</td>
+      <td class="cancel-cell">${Number(r.total_cancel).toLocaleString('id-ID')}</td>
+      <td>${rupiah(r.ads_spend)}</td>
+      <td>${rupiah(r.hpp_total)}</td>
+      <td class="profit-cell ${profitClass}">${rupiah(profit)}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadReport(){
+  if(!state.shop) return;
+  document.getElementById('dailyBody').innerHTML = '<tr><td colspan="10" class="empty-note">Memuat data...</td></tr>';
+  try{
+    const data = await fetchJSON(`${API}/report?shop=${state.shop}&year=${state.year}&month=${state.month}`);
+    renderSummary(data.summary);
+    renderDaily(data.rows);
+  }catch(e){
+    document.getElementById('dailyBody').innerHTML = `<tr><td colspan="10" class="empty-note">Gagal memuat data: ${e.message}</td></tr>`;
+  }
+}
+
+async function loadHpp(){
+  const body = document.getElementById('hppBody');
+  body.innerHTML = '<tr><td colspan="5" class="empty-note">Memuat...</td></tr>';
+  try{
+    const data = await fetchJSON(`${API}/hpp?shop=${state.shop}`);
+    if(!data.rows.length){ body.innerHTML = '<tr><td colspan="5" class="empty-note">Belum ada HPP diinput.</td></tr>'; return; }
+    body.innerHTML = data.rows.map(r => `
+      <tr>
+        <td>${r.model_id}</td>
+        <td>${r.sku_variasi || '-'}</td>
+        <td>${r.product_name || '-'}</td>
+        <td>${rupiah(r.hpp)}</td>
+        <td><button class="del" data-model="${r.model_id}">Hapus</button></td>
+      </tr>`).join('');
+    body.querySelectorAll('button.del').forEach(btn => {
+      btn.onclick = async () => {
+        const token = getAdminToken();
+        try{
+          await fetchJSON(`${API}/hpp`, {
+            method:'DELETE',
+            headers:{ 'Content-Type':'application/json', 'x-admin-secret': token || '' },
+            body: JSON.stringify({ shop: state.shop, model_id: btn.dataset.model }),
+          });
+          loadHpp(); loadReport();
+        }catch(e){
+          localStorage.removeItem('admin_token');
+          alert('Gagal hapus (cek token admin). ' + e.message);
+        }
+      };
+    });
+  }catch(e){
+    body.innerHTML = `<tr><td colspan="5" class="empty-note">Gagal memuat: ${e.message}</td></tr>`;
+  }
+}
+
+// Dashboard (GET) publik utk siapa saja. Tapi ubah HPP butuh token admin
+// supaya data tidak bisa diubah sembarang orang yg kebetulan buka link.
+function getAdminToken(){
+  let t = localStorage.getItem('admin_token');
+  if(!t){
+    t = prompt('Masukkan token admin utk mengubah HPP (hubungi pemilik toko kalau belum punya):');
+    if(t) localStorage.setItem('admin_token', t);
+  }
+  return t;
+}
+
+document.getElementById('hppForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const fd = new FormData(ev.target);
+  const payload = {
+    shop: state.shop,
+    model_id: fd.get('model_id'),
+    sku_variasi: fd.get('sku_variasi'),
+    product_name: fd.get('product_name'),
+    hpp: parseFloat(fd.get('hpp')),
+  };
+  const token = getAdminToken();
+  try{
+    await fetchJSON(`${API}/hpp`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'x-admin-secret': token || '' },
+      body: JSON.stringify(payload),
+    });
+    ev.target.reset();
+    loadHpp(); loadReport();
+  }catch(e){
+    localStorage.removeItem('admin_token');
+    alert('Gagal simpan (cek token admin). ' + e.message);
+  }
+});
+
+// ---- Countdown tersinkron ke jadwal tarik data n8n (kelipatan 15 menit) ----
+async function syncCountdown(){
+  try{
+    const data = await fetchJSON(`${API}/next-refresh`);
+    state.nextRefresh = new Date(data.next_refresh).getTime();
+  }catch(e){
+    // fallback: hitung sendiri di client kalau backend belum siap
+    const now = Date.now(); const step = 15*60*1000;
+    state.nextRefresh = Math.ceil(now/step)*step;
+  }
+}
+
+function tickClock(){
+  const el = document.getElementById('clock');
+  if(!state.nextRefresh){ el.textContent = '--:--'; return; }
+  let diff = Math.max(0, state.nextRefresh - Date.now());
+  const mm = String(Math.floor(diff/60000)).padStart(2,'0');
+  const ss = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+  el.textContent = `${mm}:${ss}`;
+  el.classList.toggle('pulse', diff < 5000);
+  if(diff <= 0){
+    // waktunya n8n narik data -> refresh dashboard beberapa detik kemudian (beri jeda utk n8n selesai proses)
+    setTimeout(() => { loadReport(); syncCountdown(); }, 8000);
+  }
+}
+
+async function manualRefresh(){
+  const btn = document.getElementById('manualRefreshBtn');
+  const token = getAdminToken();
+  if(!token) return;
+  btn.disabled = true;
+  btn.textContent = '↻ Menarik data...';
+  try{
+    const result = await fetchJSON(`${API}/cron/pull`, {
+      method: 'POST',
+      headers: { 'x-admin-secret': token },
+    });
+    if(result.errors && result.errors.length){
+      alert('Sebagian gagal ditarik: ' + result.errors.map(e => `${e.shop}: ${e.error}`).join('; '));
+    }
+    await loadReport();
+  }catch(e){
+    localStorage.removeItem('admin_token');
+    alert('Gagal menarik data (cek token admin). ' + e.message);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '↻ Tarik Sekarang';
+  }
+}
+document.getElementById('manualRefreshBtn').addEventListener('click', manualRefresh);
+
+(async function init(){
+  renderMonthTabs();
+  await loadShops();
+  await loadReport();
+  await loadHpp();
+  await syncCountdown();
+  setInterval(tickClock, 1000);
+  setInterval(syncCountdown, 5*60*1000); // re-sync tiap 5 menit jaga2 drift
+})();
+</script>
+</body>
+</html>
